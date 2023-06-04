@@ -3,6 +3,14 @@ using System.Collections.Generic;
 
 namespace StudentApplication
 {
+    interface IAnimal
+    {
+        string GetHabitat();
+    }
+    interface IPlant
+    {
+        decimal GetPrice();
+    }
     class Organism
     {
         // Поля объекта класса "Организм"
@@ -44,7 +52,7 @@ namespace StudentApplication
         }
     }
 
-    class Animal : Organism
+    class Animal : Organism, IAnimal
     {
         // Поля объекта класса "Животное"
         private string habitat;
@@ -62,6 +70,12 @@ namespace StudentApplication
             this.habitat = habitat;
         }
 
+        // Реализация метода интерфейса IAnimal
+        public string GetHabitat()
+        {
+            return habitat;
+        }
+
         // Переопределенный метод для вывода информации об организме
         public override string PrintInfo()
         {
@@ -69,7 +83,7 @@ namespace StudentApplication
         }
     }
 
-    class Plant : Organism
+    class Plant : Organism, IPlant
     {
         // Поля объекта класса "Растение"
         private decimal price;
@@ -87,13 +101,32 @@ namespace StudentApplication
             this.price = price;
         }
 
+        // Реализация метода интерфейса IPlant
+        public decimal GetPrice()
+        {
+            return price;
+        }
+
         // Переопределенный метод для вывода информации об организме
         public override string PrintInfo()
         {
             return $"{base.PrintInfo()} Цена: {price} рублей.";
         }
     }
-
+    static class AnimalExtensions
+    {
+        public static string GetHabitatInfo(this IAnimal animal)
+        {
+            return $"Место обитания: {animal.GetHabitat()}";
+        }
+    }
+    static class PlantExtensions
+    {
+        public static string GetPriceInfo(this IPlant plant)
+        {
+            return $"Цена: {plant.GetPrice()} рублей";
+        }
+    }
     class MedicineChest
     {
         // Поля объекта класса "Аптечка"
@@ -160,6 +193,34 @@ namespace StudentApplication
         static void Main(string[] args)
         {
             MedicineChest medicineChest = new MedicineChest("Моя аптечка");
+
+            // Добавление объектов классов "Животное" и "Растение" в аптечку
+            medicineChest.AddOrganism(new Animal("Лев", "Крупный млекопитающий", "Хищник", "Саванна"));
+            medicineChest.AddOrganism(new Plant("Кактус", "Растение семейства кактусовых", "Кактус", 20));
+            // Использование делегата для получения информации об организмах в аптечке
+            Func<Organism, string> getInfo = (organism) =>
+            {
+                if (organism is IAnimal)
+                {
+                    return $"{organism.PrintInfo()} {((IAnimal)organism).GetHabitatInfo()}";
+                }
+                else if (organism is IPlant)
+                {
+                    return $"{organism.PrintInfo()} {((IPlant)organism).GetPriceInfo()}";
+                }
+                else
+                {
+                    return organism.PrintInfo();
+                }
+            };
+            // Вывод информации об организмах в аптечке
+            Console.WriteLine("Организмы в аптечке:");
+            foreach (Organism organism in medicineChest.GetOrganisms())
+            {
+                Console.WriteLine(getInfo(organism));
+            }
+
+            Console.ReadKey();
 
             Console.WriteLine("Добро пожаловать в учет лекарственных организмов!");
 
@@ -266,7 +327,18 @@ namespace StudentApplication
 
                     case 3:
                         Console.WriteLine("Организмы в аптечке:");
-                        medicineChest.PrintOrganisms();
+                        foreach (Organism organism in medicineChest.GetOrganisms())
+                        {
+                            Console.WriteLine(organism.PrintInfo());
+                            if (organism is IAnimal)
+                            {
+                                Console.WriteLine(((IAnimal)organism).GetHabitatInfo());
+                            }
+                            else if (organism is IPlant)
+                            {
+                                Console.WriteLine(((IPlant)organism).GetPriceInfo());
+                            }
+                        }
                         Console.WriteLine();
                         break;
 
